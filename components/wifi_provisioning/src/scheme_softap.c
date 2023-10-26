@@ -81,6 +81,12 @@ static esp_err_t prov_start(protocomm_t *pc, void *config)
     protocomm_httpd_config_t *httpd_config = &softap_config->httpd_config;
 
     if (scheme_softap_prov_httpd_handle) {
+        ESP_LOGE(TAG, "Protocomm uses provided httpd handle 0x%X", (int)scheme_softap_prov_httpd_handle);
+        if (!scheme_softap_prov_httpd_handle) {
+            ESP_LOGE(TAG, "Protocomm httpd handle cannot be null");
+            return ESP_ERR_INVALID_ARG;
+        }
+
         httpd_config->ext_handle_provided = true;
         httpd_config->data.handle = scheme_softap_prov_httpd_handle;
     }
@@ -172,6 +178,7 @@ static esp_err_t set_config_endpoint(void *config, const char *endpoint_name, ui
 
 void wifi_prov_scheme_softap_set_httpd_handle(void *handle)
 {
+    ESP_LOGW(TAG, "Setting external HTTPd handle 0x%X", (int)handle);
     scheme_softap_prov_httpd_handle = handle;
 }
 
