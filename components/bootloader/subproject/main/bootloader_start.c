@@ -95,12 +95,12 @@ static int selected_boot_partition(const bootloader_state_t *bs)
         reset_level = true;
 #endif
 
+#ifdef CONFIG_BOOTLOADER_WAIT_AFTER_EN
         ESP_LOGW(TAG, "Use GPIO %d for more than %d s to perform factory reset!",
             (int)CONFIG_BOOTLOADER_NUM_PIN_FACTORY_RESET,
             (int)(CONFIG_BOOTLOADER_HOLD_TIME_GPIO + BL_HOLDOFF_TIME_MS/1000)
         );
 
-#ifdef CONFIG_BOOTLOADER_WAIT_AFTER_EN
         //give the user a chance to react after a power up to hold BOOT button
         uint32_t tm_start = esp_log_early_timestamp();
         do { } while (BL_HOLDOFF_TIME_MS > ((esp_log_early_timestamp() - tm_start) ));
