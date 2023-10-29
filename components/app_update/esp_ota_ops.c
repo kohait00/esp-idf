@@ -202,20 +202,20 @@ esp_err_t esp_ota_write(esp_ota_handle_t handle, const void *data, size_t size)
         return ESP_ERR_INVALID_ARG;
     }
 
+    if(size == 0)
+    {
+        ESP_LOGW(TAG, "write data size is 0");
+        return ESP_OK;
+    }
+
     // find ota handle in linked list
     for (it = LIST_FIRST(&s_ota_ops_entries_head); it != NULL; it = LIST_NEXT(it, entries)) {
         if (it->handle == handle) {
             if (it->need_erase) {
                 // must erase the partition before writing to it
-                uint32_t first_sector = it->wrote_size / SPI_FLASH_SEC_SIZE;
-                uint32_t last_sector = (it->wrote_size + size) / SPI_FLASH_SEC_SIZE;
+                uint32_t first_sector = it->wrote_size / SPI_FLASH_SEC_SIZE; //first affected sector
+                uint32_t last_sector = (it->wrote_size + size - 1) / SPI_FLASH_SEC_SIZE; //last affected sector
 
-                if(last_sector * SPI_FLASH_SEC_SIZE >= it->part->size)
-                {
-                    //special case of having arrived passed the end of the flash, so move to the real last sector
-                    //it probably has been erased previously, if last_sector==first_sector
-                    last_sector = (it->part->size / SPI_FLASH_SEC_SIZE) - 1;
-                }
 
                 ret = ESP_OK;
                 if ((it->wrote_size % SPI_FLASH_SEC_SIZE) == 0) {
