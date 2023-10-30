@@ -204,7 +204,7 @@ esp_err_t esp_ota_write(esp_ota_handle_t handle, const void *data, size_t size)
 
     if(size == 0)
     {
-        ESP_LOGW(TAG, "write data size is 0");
+        ESP_LOGD(TAG, "write data size is 0");
         return ESP_OK;
     }
 
