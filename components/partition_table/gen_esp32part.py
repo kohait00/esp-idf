@@ -195,8 +195,13 @@ class PartitionTable(list):
         # fix up missing offsets & negative sizes
         last_end = offset_part_table + PARTITION_TABLE_SIZE  # first offset after partition table
         for e in res:
-            if e.offset is not None and e.offset < last_end and e.offset + e.size > offset_part_table:
-
+            if e.offset is not None and e.type == DATA_TYPE and e.subtype == 0xEE:
+                if e.offset != offset_part_table or e.size != PARTITION_TABLE_SIZE:
+                    raise InputError('CSV Error at line %d: Partition Table isnt placed where it belongs.'
+                                     'Partition table at 0x%x (0x%x). '
+                                     'Expected 0x%x (0x%x).'
+                                     % (e.line_no, e.offset, e.size, offset_part_table, PARTITION_TABLE_SIZE))
+            elif e.offset is not None and e.offset < last_end and e.offset + e.size > offset_part_table:
                 if e == res[0]:
                     raise InputError('CSV Error at line %d: Partitions overlap. Partition sets offset 0x%x. '
                                      'But partition table occupies the whole sector 0x%x. '
@@ -265,7 +270,13 @@ class PartitionTable(list):
         # check for overlaps
         last = None
         for p in sorted(self, key=lambda x:x.offset):
-            if p.offset < offset_part_table + PARTITION_TABLE_SIZE and p.offset + p.size > offset_part_table:
+            if p.offset is not None and p.type == DATA_TYPE and p.subtype == 0xEE:
+                if p.offset != offset_part_table and p.size != PARTITION_TABLE_SIZE:
+                    raise InputError('Partition Table line %d: Partition Table isnt placed where it belongs.'
+                                     'Partition Table at 0x%x (0x%x). '
+                                     'Expected 0x%x (0x%x).'
+                                     % (p.line_no, p.offset, p.size, offset_part_table, PARTITION_TABLE_SIZE))
+            elif p.offset < offset_part_table + PARTITION_TABLE_SIZE and p.offset + p.size > offset_part_table:
                 raise InputError('Partition offset 0x%x is below 0x%x' % (p.offset, offset_part_table + PARTITION_TABLE_SIZE))
             if last is not None and p.offset < last.offset + last.size:
                 raise InputError('Partition at 0x%x overlaps 0x%x-0x%x' % (p.offset, last.offset, last.offset + last.size - 1))
