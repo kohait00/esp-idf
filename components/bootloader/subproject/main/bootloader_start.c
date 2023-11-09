@@ -10,6 +10,11 @@
 #include "bootloader_utility.h"
 #include "bootloader_common.h"
 #include "bootloader_hooks.h"
+#include "sdkconfig.h"
+
+#if 1//defined(CONFIG_BOOTLOADER_COMPRESSED_ENABLED)
+#include "bootloader_custom_ota.h"
+#endif
 
 /*
  * Time in ms to hold bootloader, so user can see what to do for factory reset
@@ -59,6 +64,11 @@ void __attribute__((noreturn)) call_start_cpu0(void)
     if (boot_index == INVALID_INDEX) {
         bootloader_reset();
     }
+
+#if 1//defined(CONFIG_BOOTLOADER_COMPRESSED_ENABLED)
+    // 2.1 Call custom OTA routine
+    boot_index = bootloader_custom_ota_main(&bs, boot_index);
+#endif
 
     // 3. Load the app image for booting
     bootloader_utility_load_boot_image(&bs, boot_index);
