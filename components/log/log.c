@@ -226,6 +226,43 @@ void esp_log_write(esp_log_level_t level,
     va_end(list);
 }
 
+void esp_log_early_writev(esp_log_level_t level,
+                   const char *tag,
+                   const char *format,
+                   va_list args)
+{
+//    (*s_log_early_print_func)(format, args); //todo
+}
+
+void esp_log_early_write(esp_log_level_t level,
+                   const char *tag,
+                   const char *format, ...) __attribute__((weak, alias("esp_log_early_write_default")));
+
+void esp_log_early_write_default(esp_log_level_t level,
+                   const char *tag,
+                   const char *format, ...)
+{
+//    va_list list;
+//    va_start(list, format);
+//    esp_log_early_writev(level, tag, format, list);
+//    va_end(list);
+
+//	void *args = __builtin_apply_args();
+//	void *ret = __builtin_apply((void (*)())(*s_log_early_print_func), args, 1000); //type is actually int (*)(const char *fmt, ...)
+//	__builtin_return(ret);
+
+//	(*s_log_early_print_func)(format, __builtin_va_arg_pack());
+
+//	(*(int (*)(const char *))s_log_early_print_func)(format);
+
+//    (*s_log_early_print_func)(format, args);
+
+	//esp_rom_printf(format, ...);
+
+//	register early_vprintf_like_t e = s_log_early_print_func;
+//	asm("j a0");
+}
+
 static inline bool get_cached_log_level(const char *tag, esp_log_level_t *level)
 {
     // Look for `tag` in cache
