@@ -147,7 +147,7 @@ static void  esp_startup_start_app_other_cores_default(void)
 /* This function has to be in IRAM, as while it is running on CPU1, CPU0 may do some flash operations
  * (e.g. initialize the core dump), which means that cache will be disabled.
  */
-static void IRAM_ATTR start_cpu_other_cores_default(void)
+void IRAM_ATTR start_cpu_other_cores_default(void)
 {
     do_system_init_fn(ESP_SYSTEM_INIT_STAGE_SECONDARY);
 
@@ -191,7 +191,7 @@ static void do_secondary_init(void)
 #endif
 }
 
-static void start_cpu0_default(void)
+void start_cpu0_default(void)
 {
     // Initialize core components and services.
     do_core_init();
