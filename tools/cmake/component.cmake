@@ -152,7 +152,7 @@ function(__component_add component_dir prefix)
     get_filename_component(base_dir ${abs_dir} NAME)
 
     if(NOT EXISTS "${abs_dir}/CMakeLists.txt")
-        message(FATAL_ERROR "Directory '${component_dir}' does not contain a component.")
+        message(FATAL_ERROR "Directory '${component_dir}' (evaluated to '${abs_dir}') does not contain a component.")
     endif()
 
     set(component_name ${base_dir})
