@@ -31,6 +31,7 @@ typedef enum {
 } esp_log_level_t;
 
 typedef int (*vprintf_like_t)(const char *, va_list);
+typedef int (*early_vprintf_like_t)(const char *, ...);
 
 /**
  * @brief Default log level
@@ -111,6 +112,22 @@ esp_log_level_t esp_log_level_get(const char* tag);
  * @return func old Function used for output.
  */
 vprintf_like_t esp_log_set_vprintf(vprintf_like_t func);
+
+/**
+ * @brief Set function used to additionally early output log entries
+ *
+ * By default, log output goes to UART0. This function can be used to redirect log
+ * output to some other destination, such as file or network. Returns the original
+ * log handler, which may be necessary to return output to the previous destination.
+ *
+ * @note Please note that function callback here must be re-entrant as it can be
+ * invoked in parallel from multiple thread context.
+ *
+ * @param func new Function used for output. Must have same signature as vprintf.
+ *
+ * @return func old Function used for output.
+ */
+early_vprintf_like_t esp_log_set_early_vprintf(early_vprintf_like_t func);
 
 /**
  * @brief Function which returns timestamp to be used in log output
