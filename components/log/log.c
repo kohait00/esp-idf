@@ -70,6 +70,7 @@ static SLIST_HEAD(log_tags_head, uncached_tag_entry_) s_log_tags = SLIST_HEAD_IN
 static cached_tag_entry_t s_log_cache[TAG_CACHE_SIZE];
 static uint32_t s_log_cache_max_generation = 0;
 static uint32_t s_log_cache_entry_count = 0;
+static early_vprintf_like_t s_log_early_print_func = &esp_rom_printf;
 static vprintf_like_t s_log_print_func = &vprintf;
 
 #ifdef LOG_BUILTIN_CHECKS
@@ -91,6 +92,13 @@ vprintf_like_t esp_log_set_vprintf(vprintf_like_t func)
     vprintf_like_t orig_func = s_log_print_func;
     s_log_print_func = func;
     esp_log_impl_unlock();
+    return orig_func;
+}
+
+early_vprintf_like_t esp_log_set_early_vprintf(early_vprintf_like_t func)
+{
+	early_vprintf_like_t orig_func = s_log_early_print_func;
+    s_log_early_print_func = func;
     return orig_func;
 }
 
