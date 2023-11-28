@@ -162,6 +162,16 @@ uint32_t esp_log_early_timestamp(void);
 void esp_log_write(esp_log_level_t level, const char* tag, const char* format, ...) __attribute__((format(printf, 3, 4)));
 
 /**
+ * @brief Write message into the log
+ *
+ * This function is not intended to be used directly. Instead, use one of
+ * ESP_LOGE, ESP_LOGW, ESP_LOGI, ESP_LOGD, ESP_LOGV macros.
+ *
+ * This function or these macros should not be used from an interrupt.
+ */
+void esp_log_early_write(esp_log_level_t level, const char* tag, const char* format, ...); //__attribute__ ((format (printf, 3, 4)));
+
+/**
  * @brief Write message into the log, va_list variant
  * @see esp_log_write()
  *
@@ -349,10 +359,19 @@ void esp_log_writev(esp_log_level_t level, const char* tag, const char* format, 
 #define _ESP_LOG_EARLY_ENABLED(log_level) (LOG_LOCAL_LEVEL >= (log_level) && esp_log_default_level >= (log_level))
 #endif
 
+#if defined(__cplusplus) && (__cplusplus >  201703L)
 #define ESP_LOG_EARLY_IMPL(tag, format, log_level, log_tag_letter, ...) do {                             \
         if (_ESP_LOG_EARLY_ENABLED(log_level)) {                                                         \
+            esp_log_early_write(log_level, tag, LOG_FORMAT(log_tag_letter, format), esp_log_timestamp(), tag __VA_OPT__(,) __VA_ARGS__); \
+            esp_rom_printf(LOG_FORMAT(log_tag_letter, format), esp_log_timestamp(), tag __VA_OPT__(,) __VA_ARGS__); \
+        }} while(0)
+#else
+#define ESP_LOG_EARLY_IMPL(tag, format, log_level, log_tag_letter, ...) do {                             \
+        if (_ESP_LOG_EARLY_ENABLED(log_level)) {                                                         \
+            esp_log_early_write(log_level, tag, LOG_FORMAT(log_tag_letter, format), esp_log_timestamp(), tag, ##__VA_ARGS__); \
             esp_rom_printf(LOG_FORMAT(log_tag_letter, format), esp_log_timestamp(), tag, ##__VA_ARGS__); \
         }} while(0)
+#endif
 
 #ifndef BOOTLOADER_BUILD
 #if defined(__cplusplus) && (__cplusplus >  201703L)
@@ -414,37 +433,37 @@ void esp_log_writev(esp_log_level_t level, const char* tag, const char* format, 
 #if defined(__cplusplus) && (__cplusplus >  201703L)
 #if CONFIG_LOG_TIMESTAMP_SOURCE_RTOS
 #define ESP_LOG_LEVEL(level, tag, format, ...) do {                     \
-        if (level==ESP_LOG_ERROR )          { esp_log_write(ESP_LOG_ERROR,      tag, LOG_FORMAT(E, format), esp_log_timestamp(), tag __VA_OPT__(,) __VA_ARGS__); } \
-        else if (level==ESP_LOG_WARN )      { esp_log_write(ESP_LOG_WARN,       tag, LOG_FORMAT(W, format), esp_log_timestamp(), tag __VA_OPT__(,) __VA_ARGS__); } \
-        else if (level==ESP_LOG_DEBUG )     { esp_log_write(ESP_LOG_DEBUG,      tag, LOG_FORMAT(D, format), esp_log_timestamp(), tag __VA_OPT__(,) __VA_ARGS__); } \
-        else if (level==ESP_LOG_VERBOSE )   { esp_log_write(ESP_LOG_VERBOSE,    tag, LOG_FORMAT(V, format), esp_log_timestamp(), tag __VA_OPT__(,) __VA_ARGS__); } \
-        else                                { esp_log_write(ESP_LOG_INFO,       tag, LOG_FORMAT(I, format), esp_log_timestamp(), tag __VA_OPT__(,) __VA_ARGS__); } \
+        if (level==ESP_LOG_ERROR )          { esp_log_write(level,      tag, LOG_FORMAT(E, format), esp_log_timestamp(), tag __VA_OPT__(,) __VA_ARGS__); } \
+        else if (level==ESP_LOG_WARN )      { esp_log_write(level,       tag, LOG_FORMAT(W, format), esp_log_timestamp(), tag __VA_OPT__(,) __VA_ARGS__); } \
+        else if (level==ESP_LOG_DEBUG )     { esp_log_write(level,      tag, LOG_FORMAT(D, format), esp_log_timestamp(), tag __VA_OPT__(,) __VA_ARGS__); } \
+        else if (level==ESP_LOG_VERBOSE )   { esp_log_write(level,    tag, LOG_FORMAT(V, format), esp_log_timestamp(), tag __VA_OPT__(,) __VA_ARGS__); } \
+        else                                { esp_log_write(level,       tag, LOG_FORMAT(I, format), esp_log_timestamp(), tag __VA_OPT__(,) __VA_ARGS__); } \
     } while(0)
 #elif CONFIG_LOG_TIMESTAMP_SOURCE_SYSTEM
 #define ESP_LOG_LEVEL(level, tag, format, ...) do {                     \
-        if (level==ESP_LOG_ERROR )          { esp_log_write(ESP_LOG_ERROR,      tag, LOG_SYSTEM_TIME_FORMAT(E, format), esp_log_system_timestamp(), tag __VA_OPT__(,) __VA_ARGS__); } \
-        else if (level==ESP_LOG_WARN )      { esp_log_write(ESP_LOG_WARN,       tag, LOG_SYSTEM_TIME_FORMAT(W, format), esp_log_system_timestamp(), tag __VA_OPT__(,) __VA_ARGS__); } \
-        else if (level==ESP_LOG_DEBUG )     { esp_log_write(ESP_LOG_DEBUG,      tag, LOG_SYSTEM_TIME_FORMAT(D, format), esp_log_system_timestamp(), tag __VA_OPT__(,) __VA_ARGS__); } \
-        else if (level==ESP_LOG_VERBOSE )   { esp_log_write(ESP_LOG_VERBOSE,    tag, LOG_SYSTEM_TIME_FORMAT(V, format), esp_log_system_timestamp(), tag __VA_OPT__(,) __VA_ARGS__); } \
-        else                                { esp_log_write(ESP_LOG_INFO,       tag, LOG_SYSTEM_TIME_FORMAT(I, format), esp_log_system_timestamp(), tag __VA_OPT__(,) __VA_ARGS__); } \
+        if (level==ESP_LOG_ERROR )          { esp_log_write(level,      tag, LOG_SYSTEM_TIME_FORMAT(E, format), esp_log_system_timestamp(), tag __VA_OPT__(,) __VA_ARGS__); } \
+        else if (level==ESP_LOG_WARN )      { esp_log_write(level,       tag, LOG_SYSTEM_TIME_FORMAT(W, format), esp_log_system_timestamp(), tag __VA_OPT__(,) __VA_ARGS__); } \
+        else if (level==ESP_LOG_DEBUG )     { esp_log_write(level,      tag, LOG_SYSTEM_TIME_FORMAT(D, format), esp_log_system_timestamp(), tag __VA_OPT__(,) __VA_ARGS__); } \
+        else if (level==ESP_LOG_VERBOSE )   { esp_log_write(level,    tag, LOG_SYSTEM_TIME_FORMAT(V, format), esp_log_system_timestamp(), tag __VA_OPT__(,) __VA_ARGS__); } \
+        else                                { esp_log_write(level,       tag, LOG_SYSTEM_TIME_FORMAT(I, format), esp_log_system_timestamp(), tag __VA_OPT__(,) __VA_ARGS__); } \
     } while(0)
 #endif //CONFIG_LOG_TIMESTAMP_SOURCE_xxx
 #else // !(defined(__cplusplus) && (__cplusplus >  201703L))
 #if CONFIG_LOG_TIMESTAMP_SOURCE_RTOS
 #define ESP_LOG_LEVEL(level, tag, format, ...) do {                     \
-        if (level==ESP_LOG_ERROR )          { esp_log_write(ESP_LOG_ERROR,      tag, LOG_FORMAT(E, format), esp_log_timestamp(), tag, ##__VA_ARGS__); } \
-        else if (level==ESP_LOG_WARN )      { esp_log_write(ESP_LOG_WARN,       tag, LOG_FORMAT(W, format), esp_log_timestamp(), tag, ##__VA_ARGS__); } \
-        else if (level==ESP_LOG_DEBUG )     { esp_log_write(ESP_LOG_DEBUG,      tag, LOG_FORMAT(D, format), esp_log_timestamp(), tag, ##__VA_ARGS__); } \
-        else if (level==ESP_LOG_VERBOSE )   { esp_log_write(ESP_LOG_VERBOSE,    tag, LOG_FORMAT(V, format), esp_log_timestamp(), tag, ##__VA_ARGS__); } \
-        else                                { esp_log_write(ESP_LOG_INFO,       tag, LOG_FORMAT(I, format), esp_log_timestamp(), tag, ##__VA_ARGS__); } \
+        if (level==ESP_LOG_ERROR )          { esp_log_write(level,      tag, LOG_FORMAT(E, format), esp_log_timestamp(), tag, ##__VA_ARGS__); } \
+        else if (level==ESP_LOG_WARN )      { esp_log_write(level,       tag, LOG_FORMAT(W, format), esp_log_timestamp(), tag, ##__VA_ARGS__); } \
+        else if (level==ESP_LOG_DEBUG )     { esp_log_write(level,      tag, LOG_FORMAT(D, format), esp_log_timestamp(), tag, ##__VA_ARGS__); } \
+        else if (level==ESP_LOG_VERBOSE )   { esp_log_write(level,    tag, LOG_FORMAT(V, format), esp_log_timestamp(), tag, ##__VA_ARGS__); } \
+        else                                { esp_log_write(level,       tag, LOG_FORMAT(I, format), esp_log_timestamp(), tag, ##__VA_ARGS__); } \
     } while(0)
 #elif CONFIG_LOG_TIMESTAMP_SOURCE_SYSTEM
 #define ESP_LOG_LEVEL(level, tag, format, ...) do {                     \
-        if (level==ESP_LOG_ERROR )          { esp_log_write(ESP_LOG_ERROR,      tag, LOG_SYSTEM_TIME_FORMAT(E, format), esp_log_system_timestamp(), tag, ##__VA_ARGS__); } \
-        else if (level==ESP_LOG_WARN )      { esp_log_write(ESP_LOG_WARN,       tag, LOG_SYSTEM_TIME_FORMAT(W, format), esp_log_system_timestamp(), tag, ##__VA_ARGS__); } \
-        else if (level==ESP_LOG_DEBUG )     { esp_log_write(ESP_LOG_DEBUG,      tag, LOG_SYSTEM_TIME_FORMAT(D, format), esp_log_system_timestamp(), tag, ##__VA_ARGS__); } \
-        else if (level==ESP_LOG_VERBOSE )   { esp_log_write(ESP_LOG_VERBOSE,    tag, LOG_SYSTEM_TIME_FORMAT(V, format), esp_log_system_timestamp(), tag, ##__VA_ARGS__); } \
-        else                                { esp_log_write(ESP_LOG_INFO,       tag, LOG_SYSTEM_TIME_FORMAT(I, format), esp_log_system_timestamp(), tag, ##__VA_ARGS__); } \
+        if (level==ESP_LOG_ERROR )          { esp_log_write(level,      tag, LOG_SYSTEM_TIME_FORMAT(E, format), esp_log_system_timestamp(), tag, ##__VA_ARGS__); } \
+        else if (level==ESP_LOG_WARN )      { esp_log_write(level,       tag, LOG_SYSTEM_TIME_FORMAT(W, format), esp_log_system_timestamp(), tag, ##__VA_ARGS__); } \
+        else if (level==ESP_LOG_DEBUG )     { esp_log_write(level,      tag, LOG_SYSTEM_TIME_FORMAT(D, format), esp_log_system_timestamp(), tag, ##__VA_ARGS__); } \
+        else if (level==ESP_LOG_VERBOSE )   { esp_log_write(level,    tag, LOG_SYSTEM_TIME_FORMAT(V, format), esp_log_system_timestamp(), tag, ##__VA_ARGS__); } \
+        else                                { esp_log_write(level,       tag, LOG_SYSTEM_TIME_FORMAT(I, format), esp_log_system_timestamp(), tag, ##__VA_ARGS__); } \
     } while(0)
 #endif //CONFIG_LOG_TIMESTAMP_SOURCE_xxx
 #endif // !(defined(__cplusplus) && (__cplusplus >  201703L))
@@ -508,11 +527,13 @@ void esp_log_writev(esp_log_level_t level, const char* tag, const char* format, 
 #if defined(__cplusplus) && (__cplusplus >  201703L)
 #define ESP_DRAM_LOG_IMPL(tag, format, log_level, log_tag_letter, ...) do {                                  \
         if (_ESP_LOG_EARLY_ENABLED(log_level)) {                                                             \
+            esp_log_early_write(log_level, tag, _ESP_LOG_DRAM_LOG_FORMAT(log_tag_letter, format), esp_log_timestamp(), tag __VA_OPT__(,) __VA_ARGS__); \
             esp_rom_printf(_ESP_LOG_DRAM_LOG_FORMAT(log_tag_letter, format), tag __VA_OPT__(,) __VA_ARGS__); \
         }} while(0)
 #else // !(defined(__cplusplus) && (__cplusplus >  201703L))
 #define ESP_DRAM_LOG_IMPL(tag, format, log_level, log_tag_letter, ...) do {                       \
         if (_ESP_LOG_EARLY_ENABLED(log_level)) {                                                  \
+            esp_log_early_write(log_level, tag, _ESP_LOG_DRAM_LOG_FORMAT(log_tag_letter, format), esp_log_timestamp(), tag, ##__VA_ARGS__); \
             esp_rom_printf(_ESP_LOG_DRAM_LOG_FORMAT(log_tag_letter, format), tag, ##__VA_ARGS__); \
         }} while(0)
 #endif // !(defined(__cplusplus) && (__cplusplus >  201703L))
