@@ -215,7 +215,7 @@ esp_err_t esp_ota_write(esp_ota_handle_t handle, const void *data, size_t size)
                 uint32_t first_sector = it->wrote_size / SPI_FLASH_SEC_SIZE; // first affected sector
                 uint32_t last_sector = (it->wrote_size + size - 1) / SPI_FLASH_SEC_SIZE; // last affected sector
 
-                ESP_LOGW(TAG, "OTA image wrote_size = %X, size = %X, wrote_size+size = %X (first 0x%02X, last 0x%02X)",
+                ESP_LOGD(TAG, "OTA image wrote_size = %X, size = %X, wrote_size+size = %X (first 0x%02X, last 0x%02X)",
                 		(int)it->wrote_size, (int)size, (int)it->wrote_size+size, (int)first_sector, (int)last_sector);
 
                 ret = ESP_OK;
